@@ -102,7 +102,6 @@ public class Grid : MonoBehaviour {
 
                 // Test if test node is inside the grid
                 if (CheckX >=0 && CheckX < nodesInX && CheckY >= 0 && CheckY < nodesInY)
-
                     // If around and inside the grid, add to the list
                     Neighbours.Add(nodeGrid[CheckX, CheckY]);
             }

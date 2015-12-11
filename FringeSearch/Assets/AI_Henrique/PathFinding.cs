@@ -22,7 +22,9 @@ public class PathFinding : MonoBehaviour {
 
     void Update()
     {
-        FindPath(seeker.position, target.position);
+        // Calls A* Pathfinding function.
+        if (Input.GetKeyDown(KeyCode.P))
+            FindPath(seeker.position, target.position);
     }
 
     // Finds path between the two positions
@@ -103,7 +105,6 @@ public class PathFinding : MonoBehaviour {
 
         // Draw Path using gizmos
         nodeGrid.drawnPath = retracedPath;
-        
     }
 
     // Get Distance between two different Nodes
@@ -114,10 +115,12 @@ public class PathFinding : MonoBehaviour {
         int distY = Mathf.Abs(nodeA.gridY - nodeB.gridY);
 
         // Check to see which axis-distance is shorter
-        // Equation = Distance = DiagCost*ShortestDist + StraightCos*(LongestDist - ShortestDist)
+        // Equation => Distance = DiagCost*ShortestDist + StraightCos*(LongestDist - ShortestDist)
         if (distX > distY)
+            // YDistance is shortest
             return DiagCost * distY + StraightCost * (distX - distY);
         // Else
+        // XDistance is shortest
         return DiagCost * distX + StraightCost * (distY - distX);
     }
 }

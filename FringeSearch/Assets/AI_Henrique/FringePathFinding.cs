@@ -22,8 +22,9 @@ public class FringePathFinding : MonoBehaviour {
 
     void Update()
     {
-        // Calls the Pathfinding function every frame
-        if(Input.GetKeyDown(KeyCode.Space))FindPath(seeker.position, target.position);
+        // Calls the Pathfinding function
+        if(Input.GetKeyDown(KeyCode.O))
+            FindPath(seeker.position, target.position);
     }
 
     // Finds path between the two positions
@@ -34,111 +35,120 @@ public class FringePathFinding : MonoBehaviour {
         Node targetNode = nodeGrid.GetNodeFromWorld(targetPos);
 
         // Lists for Fringe Search
-        LinkedList<Node> fringeList = new LinkedList<Node>();   // Fringe List
-        //HashSet<Node>  cache = new HashSet<Node>();          // Chosen nodes for the path that have being looked at.
+        LinkedList<Node> fringeList = new LinkedList<Node>();               // Fringe List
         Dictionary<Node,Node> cache = new Dictionary<Node, Node>();          // Chosen nodes for the path that have being looked at.
 
         // Adds starting Node to list
         fringeList.AddFirst(startNode);
 
+        // Initialize cache.
         cache.Add(startNode, null);
 
-        //cache[startNode] = null;
-
+        // Calculate Max Fcost
         int fLimit = GetNodeDistance(startNode, targetNode);
 
-        bool found = false;
+        // Initialize End of Loop variable
+        bool wasTargetFound = false;
 
-        int C1 = 1000, C2 = 1000;
-
-        while (!found && fringeList.Count > 0 )
+        // Fringe Search Loop
+        while (!wasTargetFound && fringeList.Count > 0 )
         {
-            if (C1-- < 0 || C2 < 0)
-            {
-                Debug.Log("Break 01");
-                break;
-            }
-
+            // Starting Minimum Fcost => infinity
             int fmin = int.MaxValue;
 
-            for (var linkedNode = fringeList.First;  linkedNode != null;)
+            // Iterate through fringeList nodes.
+            for (var listedNode = fringeList.First;  listedNode != null;)
             {
+                //Evaluated node.
+                Node evalNode = listedNode.Value;
 
-                if (C2-- < 0)
-                {
-                    Debug.Log("Break 02");
-                    break;
-                }
+                // Calculate Evaluated node fCost.
+                int  evalNodeFCost = evalNode.gCost + GetNodeDistance(evalNode, targetNode);
 
-                Node node = linkedNode.Value;
+                // If node is not walkable, its F cost is infinity.
+                if (!evalNode.isWalkable)
+                    evalNodeFCost = int.MaxValue;
 
-               int  f = node.gCost + GetNodeDistance(node, targetNode);
-
-                if (f > fLimit)
-                {
-                    fmin = Mathf.Min(f, fmin);
-                    linkedNode = linkedNode.Next;
+                // If Cost is bigger than limit or node is not walkable, ignore node.
+                if (evalNodeFCost > fLimit )
+                {   // Update new Fmin
+                    fmin = Mathf.Min(evalNodeFCost, fmin);
+                    // Get next node
+                    listedNode = listedNode.Next;
                     continue;
                 }
-
-                if (node == targetNode)
+                // If target has been found, end search
+                if (evalNode == targetNode)
                 {
-                    found = true;
+                    wasTargetFound = true;
                     break;
                 }
 
-                // Get node children
-                List<Node> Connections = nodeGrid.GetNodeNeighbours(node);
-                Connections.Reverse();      // reverse to read right to left
+                // Evaluate node Neighbors
+                List<Node> neighborList = nodeGrid.GetNodeNeighbours(evalNode);
+                // reverse to read right to left
+                neighborList.Reverse();      
 
-                foreach (Node connection in Connections)
+                foreach (Node neighbor in neighborList)
                 {
-                    int costConn = node.gCost + GetNodeDistance(node, connection);
+                    // Calculate neighbor cumulative cost.
+                    int costNeighbor = evalNode.gCost + GetNodeDistance(evalNode, neighbor);
 
-                    if (cache.ContainsKey(connection))
+                    // Check if cache already contains neighbor
+                    if (cache.ContainsKey(neighbor))
                     {
-                        if (costConn>= connection.gCost)
+                        // If current calculated neighbor cost is bigger than the one on cache, do not update
+                        if (costNeighbor >= neighbor.gCost)
                         {
                             continue;
                         }
                     }
+                    
+                    // update Lists with new neighbor information.
+                    var listedNeighbor = fringeList.Find(neighbor);
 
-
-                    var linkedConn = fringeList.Find(connection);
-
-                    if (linkedConn != null)
+                    // Remove old Neighbor entry and replace with new on fringe.
+                    if (listedNeighbor != null)
                     {
-                        fringeList.Remove(linkedConn);
-                        fringeList.AddAfter(fringeList.Find(node), linkedConn);
+                        fringeList.Remove(listedNeighbor);
+                        fringeList.AddAfter(fringeList.Find(evalNode), listedNeighbor);
                     }
                     else
-                    {
-                        fringeList.AddAfter(fringeList.Find(node), connection);
+                    {   // Create new Neighbor entry on fringe.
+                        fringeList.AddAfter(fringeList.Find(evalNode), neighbor);
                     }
 
-                    connection.gCost = costConn;
-                    cache.Add(connection, node);
+                    // Update neighbor acumulated gcost and replace on cache.
+                    neighbor.gCost = costNeighbor;
+                    cache.Remove(neighbor);
+                    cache.Add(neighbor, evalNode);
 
                     
-                }
-                var lastNode = linkedNode;
-
-                linkedNode = lastNode.Next;
-
+                } // foreach
+                
+                // iterate through fringe lists
+                var lastNode = listedNode;
+                listedNode = lastNode.Next;
                 fringeList.Remove(lastNode);
-            }
+            } //for
+            // Update fLimit to current fMin.
             fLimit = fmin;
-        }
 
+        }// while
+
+        // Path has been found, time to draw the path
+        // Path list
         var path = new List<Node>();
 
+        // Retroactively add nodes to path list starting from target node.
         var pathNode = targetNode;
         while (pathNode != null)
         {
-            path.Add(pathNode);
-            pathNode = cache[pathNode];
+            path.Add(pathNode);             // Add node
+            pathNode = cache[pathNode];     // Get next node from cache.
         }
 
+        // Draw path on grid.
         nodeGrid.drawnPath = path;
     }
 
