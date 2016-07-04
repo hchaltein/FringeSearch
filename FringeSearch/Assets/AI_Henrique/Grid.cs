@@ -6,7 +6,7 @@ using System.Collections.Generic;
 public class Grid : MonoBehaviour {
 
     // Class Variables
-    Node[,] nodeGrid;                           // 2D Node Array, i.e. the actual Grid
+    Node[,] nodeGrid;                       // 2D Node Array, i.e. the actual Grid
     
     // Grid sizes
     public Vector2 gridWorldSize;           // Size of Grid in the world coordinate systems
@@ -48,7 +48,7 @@ public class Grid : MonoBehaviour {
         // temp variable used to fill isWalkable node vbariable
         bool isWalkable;
 
-        // Calculates world position fo the node and relates it to the correct Grid Coordinate
+        // Calculates world position for the node and relates it to the correct Grid Coordinate
         for (int x = 0; x < nodesInX; x++)
         {
             for (int y = 0; y < nodesInY; y++)
@@ -63,7 +63,7 @@ public class Grid : MonoBehaviour {
     }
 
 
-    // Takes a pposition in the world and return its grid's X,Y coordinates for the node in that position.
+    // Takes a position in the world and return its grid's X,Y coordinates for the node in that position.
     public Node GetNodeFromWorld(Vector3 worldPosition)
     {
         // Transform World position in "percentuality inside of node".
